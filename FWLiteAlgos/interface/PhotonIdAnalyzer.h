@@ -29,7 +29,8 @@ class CaloSubdetectorTopology;
 
 namespace diphotons {
 
-    typedef StringObjectFunction<flashgg::Photon, false> PhotonFunctor;
+    // typedef StringObjectFunction<flashgg::Photon, false> PhotonFunctor;
+    typedef StringObjectFunction<reco::Photon, true> PhotonFunctor;
     /// typedef fwlite::helper::ScannerBase PhotonFunctor;
 
     class PhotonIdAnalyzer : public edm::BasicAnalyzer
@@ -77,7 +78,7 @@ namespace diphotons {
         flashgg::IdleWatchdog watchdog_;
 
         TTree *bookTree( const std::string &name, TFileDirectory &fs );
-        void fillTreeBranches( const flashgg::Photon &pho,
+        void fillTreeBranches( const reco::Photon &pho,
                                const EcalRecHitCollection *EcalBarrelRecHits, const EcalRecHitCollection *EcalEndcapRecHits );
 
         TTree *promptTree_, *fakesTree_;

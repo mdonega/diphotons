@@ -21,12 +21,15 @@
 
 using namespace std;
 using namespace edm;
-using namespace flashgg;
+// using namespace flashgg;
 using namespace diphotons;
 
 using pat::PackedGenParticle;
 using reco::Candidate;
 using reco::Vertex;
+typedef reco::Photon PhotonT;
+
+using namespace flashgg;
 
 typedef enum { kFake, kPrompt  } genMatch_t;
 
@@ -53,7 +56,7 @@ PhotonIdAnalyzer::PhotonIdAnalyzer( const edm::ParameterSet &cfg, TFileDirectory
     processId_( cfg.getParameter<string>( "processId" ) ),
     mvaComputer_( cfg ),
     watchdog_( cfg.getParameter<edm::ParameterSet>( "idleWatchdog" ) ),
-    /// photonFunctor_(edm::TypeWithDict(edm::Wrapper<vector<Photon> >::typeInfo())),
+    /// photonFunctor_(edm::TypeWithDict(edm::Wrapper<vector<PhotonT> >::typeInfo())),
     promptTree_( 0 ), fakesTree_( 0 ),
     topology_( 0 ), theSubdetTopologyEB_( 0 ), theSubdetTopologyEE_( 0 )
 {
@@ -148,7 +151,7 @@ TTree *PhotonIdAnalyzer::bookTree( const string &name, TFileDirectory &fs )
     return ret;
 }
 
-void PhotonIdAnalyzer::fillTreeBranches( const Photon &pho,
+void PhotonIdAnalyzer::fillTreeBranches( const PhotonT &pho,
         const EcalRecHitCollection *EcalBarrelRecHits, const EcalRecHitCollection *EcalEndcapRecHits )
 {
     for( size_t ibr = 0; ibr < miniTreeFunctors_.size(); ++ibr ) {
@@ -319,7 +322,7 @@ float PhotonIdAnalyzer::getEventWeight( const edm::EventBase &event )
 }
 
 // MC truth
-GenMatchInfo doGenMatch( const Photon &pho, const vector<PackedGenParticle> &genParts, float maxDr, float minLeadPt, float minPtRelOnePhoton,
+GenMatchInfo doGenMatch( const PhotonT &pho, const vector<PackedGenParticle> &genParts, float maxDr, float minLeadPt, float minPtRelOnePhoton,
                          float minPtRel, float maxExtraEnergy// , float weight,
                          // TH1 * matchMinDr,  TH1 * matchRelPtOnePhoton,  TH1 * matchRelPtIso, TH1 * matchRelPtNonIso, TH1 * matchNPartInCone, TH1 * matchExtraEnergy)
                        )
@@ -407,7 +410,7 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
 {
     watchdog_.check();
     // Handle to the photon collection
-    Handle<vector<Photon> > photons;
+    Handle<vector<PhotonT> > photons;
     Handle<vector<PackedGenParticle> > packedGenParticles;
     Handle<vector<Vertex> > vertexes;
     Handle<double> rhoHandle;
@@ -417,7 +420,7 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
     // Handle<vector<PrunedGenParticle> > prunedGenParticles;
     event.getByLabel( photons_, photons );
     // event.getByLabel(prunedGenParticles_, prunedGenParticles);
-    event.getByLabel( packedGen_, packedGenParticles );
+    //    event.getByLabel( packedGen_, packedGenParticles );
     event.getByLabel( vertexes_, vertexes );
     event.getByLabel( rhoFixedGrid_, rhoHandle );
 
@@ -443,9 +446,15 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
     PhotonIdUtils utils;
     mvaComputer_.update( event );
 
-    for( std::vector<Photon>::const_iterator ipho = photons->begin(); ipho != photons->end(); ++ipho ) {
+    for( std::vector<PhotonT>::const_iterator ipho = photons->begin(); ipho != photons->end(); ++ipho ) {
 
-        Photon *pho = ipho->clone();
+        auto cpho = dynamic_cast<const flashgg::Photon*>(&(*ipho));
+        flashgg::Photon * pho = 0;
+        if( cpho != 0 ) { 
+            pho = cpho->clone();
+        } else {
+            pho = new flashgg::Photon(pat::Photon(*ipho));
+        }
 
         if( recomputeNoZsShapes_ ) {
             utils.recomputeNonZsClusterShapes( *pho, EcalBarrelRecHits.product(), EcalEndcapRecHits.product(), topology_ );
