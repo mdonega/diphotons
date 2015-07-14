@@ -15,6 +15,7 @@
 #include "flashgg/MicroAOD/interface/PhotonIdUtils.h"
 #include "flashgg/MicroAOD/interface/PhotonMCUtils.h"
 
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include <map>
 
@@ -23,6 +24,7 @@ using namespace std;
 using namespace edm;
 // using namespace flashgg;
 using namespace diphotons;
+using reco::GenParticle;
 
 using pat::PackedGenParticle;
 using reco::Candidate;
@@ -408,10 +410,12 @@ GenMatchInfo doGenMatch( const PhotonT &pho, const vector<PackedGenParticle> &ge
 void
 PhotonIdAnalyzer::analyze( const edm::EventBase &event )
 {
+    static int nprint = 10;
     watchdog_.check();
     // Handle to the photon collection
     Handle<vector<PhotonT> > photons;
-    Handle<vector<PackedGenParticle> > packedGenParticles;
+    // Handle<vector<PackedGenParticle> > packedGenParticles;
+    Handle<vector<GenParticle> > genParticles;
     Handle<vector<Vertex> > vertexes;
     Handle<double> rhoHandle;
     Handle< EcalRecHitCollection > EcalBarrelRecHits;
@@ -421,6 +425,7 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
     event.getByLabel( photons_, photons );
     // event.getByLabel(prunedGenParticles_, prunedGenParticles);
     //    event.getByLabel( packedGen_, packedGenParticles );
+    event.getByLabel( packedGen_, genParticles );
     event.getByLabel( vertexes_, vertexes );
     event.getByLabel( rhoFixedGrid_, rhoHandle );
 
@@ -498,10 +503,38 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
         //// //// 	  cout << it->first.key() << " " << it->first.id() << " " << it->first->z() << " " << it->second << endl;
         //// //// }
 
+        // Gen matching
+        if( ! event.isRealData() ) {
+            unsigned int best = INT_MAX;
+            float bestptdiff = 99e15;
+            const auto &genPhotons = *genParticles;
+            for( unsigned int j = 0 ; j < genPhotons.size() ; j++ ) {
+                auto gen = genPhotons[j];
+                if( gen.pdgId() != 22 ) { continue; }
+                float dR = reco::deltaR( *pho, gen );
+                if( dR > 0.2 ) { continue; }
+                float ptdiff = fabs( pho->pt() - gen.pt() );
+                if( ptdiff < bestptdiff ) {
+                    bestptdiff = ptdiff;
+                    best = j;
+                }
+            }
+            if( best < INT_MAX ) {
+                auto &extra = genPhotons[best];
+                pho->addUserFloat("etrue",extra.energy());
+                pho->setGenMatchType(Photon::kPrompt);
+            }
+        }
+        
+
         for( size_t iv = 0; iv < vertexes->size(); ++iv ) {
             Ptr<Vertex> vtx( vertexes, iv );
-            float iso = pho->pfChgIso03WrtVtx( vtx, true );
-            pho->addUserFloat( Form( "chgIsoWrtVtx%d", ( int )iv ), iso );
+            try {
+                float iso = pho->pfChgIso03WrtVtx( vtx, true );
+                pho->addUserFloat( Form( "chgIsoWrtVtx%d", ( int )iv ), iso );
+            } catch (...) {
+                if( --nprint > 0 ) { cout << "Failed to read charged iso wrt vertex " << iv << endl; }
+            }
         }
 
         mvaComputer_.fill( *pho );

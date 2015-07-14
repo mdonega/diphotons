@@ -33,8 +33,8 @@ process.fwliteOutput = cms.PSet(
 )
 
 process.photonIdAnalyzer = cms.PSet(
-  photons = cms.InputTag('flashggPhotons'), ## input for the simple example above
-  #  packedGenParticles = cms.InputTag('packedGenParticles'),
+  photons = cms.InputTag('gedPhotons'), ## input for the simple example above
+  packedGenParticles = cms.InputTag('genParticles'),
   lumiWeight = cms.double(1.),
   processId = cms.string(""),
   rho = cms.InputTag('fixedGridRhoAll'),
@@ -48,12 +48,13 @@ process.photonIdAnalyzer = cms.PSet(
   endcapRecHits = cms.InputTag('reducedEcalRecHitsEE'),
 
   idleWatchdog = cms.PSet(checkEvery = cms.untracked.int32(1000),
-                          minIdleFraction = cms.untracked.double(0.3),
+                          minIdleFraction = cms.untracked.double(0.),
                           tolerance = cms.untracked.int32(5)
                           ),
   
   mvas = cms.VPSet(),
   mvaPreselection = cms.string("0"),
+  minPt = cms.untracked.double(0),
   categories = cms.VPSet()
 
   ## dumpFakes = cms.untracked.bool(False),
@@ -71,7 +72,8 @@ addMiniTreeVars(process.photonIdAnalyzer.miniTreeCfg,
                  ("superCluster.seed.energy","scSeedEnergy"),
                  ("superCluster.energy","scEnergy"),
                  
-                 ("? hasMatchedGenPhoton ? matchedGenPhoton.energy : 0","etrue"),
+                 ## ("? hasMatchedGenPhoton ? matchedGenPhoton.energy : 0","etrue"),
+                 ("userFloat('etrue')","etrue"),
 
                  ("userFloat('genIso')","genIso"),
                  ("userFloat('frixIso')","frixIso"),

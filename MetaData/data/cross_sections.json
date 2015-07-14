@@ -23,5 +23,10 @@
     "QCD_HT-100To250_13TeV-madgraph" : { "xs" : 28730000.0 },
     "QCD_HT_250To500_13TeV-madgraph" : { "xs" : 670500.0 },
     "QCD_HT-500To1000_13TeV-madgraph": { "xs" : 26740.0 },
-    "QCD_HT_1000ToInf_13TeV-madgraph": { "xs" : 769.7 }
+    "QCD_HT_1000ToInf_13TeV-madgraph": { "xs" : 769.7 },
+
+    "DoublePhotonGun"              : { "xs" : 1 },
+    "SinglePhoton_FlatPt-300To3000": { "xs" : 1 },
+    "DoublePhoton_FlatPt-5To300"   : { "xs" : 1 }
+
 } 
