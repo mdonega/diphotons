@@ -29,7 +29,9 @@ using reco::GenParticle;
 using pat::PackedGenParticle;
 using reco::Candidate;
 using reco::Vertex;
-typedef reco::Photon PhotonT;
+// typedef reco::Photon PhotonT;
+// typedef pat::Photon PhotonT;
+typedef flashgg::Photon PhotonT;
 
 using namespace flashgg;
 
@@ -153,7 +155,7 @@ TTree *PhotonIdAnalyzer::bookTree( const string &name, TFileDirectory &fs )
     return ret;
 }
 
-void PhotonIdAnalyzer::fillTreeBranches( const PhotonT &pho,
+void PhotonIdAnalyzer::fillTreeBranches( const reco::Photon &pho,
         const EcalRecHitCollection *EcalBarrelRecHits, const EcalRecHitCollection *EcalEndcapRecHits )
 {
     for( size_t ibr = 0; ibr < miniTreeFunctors_.size(); ++ibr ) {
@@ -542,7 +544,7 @@ PhotonIdAnalyzer::analyze( const edm::EventBase &event )
         fillTreeBranches( *pho, EcalBarrelRecHits.product(), EcalEndcapRecHits.product() );
 
         /// if( match.match == kPrompt ) {
-        if( ( isSherpa_ && pho->hasMatchedGenPhoton() && pho->userFloat( "genIso" ) < 5. ) || ( pho->genMatchType() == Photon::kPrompt ) ) {
+        if( ( true || (isSherpa_ && pho->hasMatchedGenPhoton() && pho->userFloat( "genIso" ) < 5. )) || ( pho->genMatchType() == Photon::kPrompt ) ) {
             if( iprompt_ == 0 ) {
                 hists_["promptPhotonPt" ]->Fill( pho->pt(), weight_ );
                 hists_["promptPhotonEta"]->Fill( pho->eta(), weight_ );

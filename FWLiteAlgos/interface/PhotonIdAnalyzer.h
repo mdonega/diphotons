@@ -37,6 +37,7 @@ namespace diphotons {
     {
 
     public:
+        PhotonIdAnalyzer( const edm::ParameterSet &cfg, TFileDirectory &fs, const edm::ConsumesCollector &cc ) : PhotonIdAnalyzer( cfg, fs ) {};
         /// default constructor
         PhotonIdAnalyzer( const edm::ParameterSet &cfg, TFileDirectory &fs );
         /// default destructor
